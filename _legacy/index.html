@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Minimal TD — Geometric Tower Defense</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="towers.jsx"></script>
+<script type="text/babel" src="screens.jsx"></script>
+<script type="text/babel" src="gameplay.jsx"></script>
+
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "theme": "default",
+  "iconStyle": "geometric",
+  "mapKey": "zigzag"
+}/*EDITMODE-END*/;
+
+function App() {
+  const [tweaks, setTweaks] = useTweaks(TWEAK_DEFAULTS);
+
+  useEffect(() => {
+    const cls = ['theme-dark','theme-mono','theme-pastel','theme-neon'];
+    cls.forEach(c => document.body.classList.remove(c));
+    if (tweaks.theme === 'dark') document.body.classList.add('theme-dark');
+    if (tweaks.theme === 'mono') document.body.classList.add('theme-mono');
+    if (tweaks.theme === 'pastel') document.body.classList.add('theme-pastel');
+    if (tweaks.theme === 'neon') document.body.classList.add('theme-neon');
+  }, [tweaks.theme]);
+
+  const iconStyle = tweaks.iconStyle;
+  const mapKey = tweaks.mapKey;
+
+  return (
+    <>
+      <DesignCanvas
+        title="MINIMAL TD"
+        subtitle="Geometric tower defense — full mock with playable prototype, screens, design system, and mobile."
+      >
+        <DCSection id="play" title="Playable Prototype">
+          <DCArtboard id="play-1" label="GAME · interactive (click to place, then START WAVE)" width={1180} height={680}>
+            <div style={{ padding: 18, height: '100%', overflow: 'hidden' }}>
+              <GamePlay width={900} height={560} mapKey={mapKey} iconStyle={iconStyle} />
+            </div>
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="screens" title="Screens">
+          <DCArtboard id="menu" label="01 · Main Menu" width={900} height={560}>
+            <MenuScreen iconStyle={iconStyle} />
+          </DCArtboard>
+          <DCArtboard id="map-select" label="02 · Map Select" width={900} height={560}>
+            <MapSelectScreen iconStyle={iconStyle} />
+          </DCArtboard>
+          <DCArtboard id="codex" label="03 · Tower Codex" width={900} height={560}>
+            <CodexScreen iconStyle={iconStyle} />
+          </DCArtboard>
+          <DCArtboard id="upgrade" label="04 · Research / Upgrade" width={900} height={560}>
+            <UpgradeScreen iconStyle={iconStyle} />
+          </DCArtboard>
+          <DCArtboard id="results" label="05 · Results" width={900} height={560}>
+            <ResultsScreen />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="mobile" title="Mobile · Portrait">
+          <DCArtboard id="mob-1" label="Mobile · Gameplay" width={360} height={720}>
+            <MobileScreen iconStyle={iconStyle} />
+          </DCArtboard>
+          <DCArtboard id="mob-2" label="Mobile · Menu" width={360} height={720}>
+            <div style={{ width: 360, height: 720, background:'var(--bg)', border:'2px solid var(--line)', padding: 22, display:'flex', flexDirection:'column', justifyContent:'space-between', position:'relative', overflow:'hidden' }}>
+              <svg width="360" height="720" style={{ position:'absolute', inset: 0 }}>
+                <circle cx="290" cy="180" r="80" fill="var(--accent-3)" stroke="var(--line)" strokeWidth="3" />
+                <rect x="40" y="500" width="120" height="50" fill="var(--accent-2)" stroke="var(--line)" strokeWidth="3" />
+                <polygon points="280,580 340,680 220,680" fill="var(--accent-1)" stroke="var(--line)" strokeWidth="3" />
+              </svg>
+              <div style={{ position:'relative' }}>
+                <div className="mono" style={{ fontSize: 10, letterSpacing:'0.18em' }}>v1.0 · 0426</div>
+                <div className="eyebrow" style={{ marginTop: 80 }}>GEOMETRIC TD</div>
+                <div className="h-display" style={{ fontSize: 70, lineHeight: 0.9, marginTop: 8 }}>MINIMAL<br/>TD<span style={{color:'var(--accent-1)'}}>.</span></div>
+              </div>
+              <div style={{ position:'relative', display:'flex', flexDirection:'column', gap: 8 }}>
+                <button className="btn btn-primary" style={{ padding:'14px 18px', fontSize: 12, justifyContent:'space-between' }}>
+                  <span>NEW RUN</span><span>→</span>
+                </button>
+                <button className="btn" style={{ padding:'12px 18px', fontSize: 11 }}>CONTINUE</button>
+                <div style={{ display:'flex', gap: 6 }}>
+                  <button className="btn btn-ghost" style={{ flex: 1, padding:'10px', fontSize: 10 }}>STATS</button>
+                  <button className="btn btn-ghost" style={{ flex: 1, padding:'10px', fontSize: 10 }}>CODEX</button>
+                  <button className="btn btn-ghost" style={{ flex: 1, padding:'10px', fontSize: 10 }}>OPTIONS</button>
+                </div>
+              </div>
+            </div>
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="ds" title="Design System">
+          <DCArtboard id="ds-1" label="Foundations · palette · type · shapes" width={900} height={560}>
+            <SystemCard iconStyle={iconStyle} />
+          </DCArtboard>
+        </DCSection>
+      </DesignCanvas>
+
+      <TweaksPanel title="Tweaks">
+        <TweakSection title="THEME">
+          <TweakRadio
+            label="Color theme"
+            value={tweaks.theme}
+            onChange={v => setTweaks({ theme: v })}
+            options={[
+              { value: 'default', label: 'Bauhaus' },
+              { value: 'dark', label: 'Dark' },
+              { value: 'mono', label: 'Mono' },
+              { value: 'pastel', label: 'Pastel' },
+              { value: 'neon', label: 'Neon' },
+            ]}
+          />
+        </TweakSection>
+        <TweakSection title="MAP">
+          <TweakRadio
+            label="Layout (live in playable prototype)"
+            value={tweaks.mapKey}
+            onChange={v => setTweaks({ mapKey: v })}
+            options={[
+              { value: 'zigzag', label: 'Zigzag' },
+              { value: 'spiral', label: 'Spiral' },
+              { value: 'fork',   label: 'Fork (dual path)' },
+              { value: 'cross',  label: 'Cross' },
+            ]}
+          />
+        </TweakSection>
+        <TweakSection title="TOWER ICONS">
+          <TweakRadio
+            label="Icon style"
+            value={tweaks.iconStyle}
+            onChange={v => setTweaks({ iconStyle: v })}
+            options={[
+              { value: 'geometric', label: 'Filled' },
+              { value: 'outline', label: 'Outline' },
+            ]}
+          />
+        </TweakSection>
+      </TweaksPanel>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

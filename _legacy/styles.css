@@ -1,0 +1,213 @@
+/* ===== Design System: Geometric Minimal TD ===== */
+
+:root {
+  /* Default theme: "Bauhaus" — primary triad on near-white */
+  --bg: #f1ede4;
+  --bg-2: #e8e2d4;
+  --ink: #111111;
+  --ink-2: #444444;
+  --muted: #8a8378;
+  --line: #111111;
+  --paper: #fbf8f0;
+
+  --accent-1: #e63946; /* red    — basic / damage */
+  --accent-2: #1d3557; /* navy   — pierce / sniper */
+  --accent-3: #f4c430; /* yellow — splash / cannon */
+  --accent-4: #2a9d8f; /* teal   — slow / freeze */
+  --accent-5: #6a4cff; /* purple — multi */
+  --accent-6: #80b918; /* green  — poison */
+  --accent-7: #ff7a00; /* orange — chain / shock */
+  --accent-8: #00b4d8; /* cyan   — support */
+
+  --r-sm: 0px;
+  --r-md: 0px;
+  --r-lg: 0px;
+
+  --stroke: 2px;
+  --stroke-bold: 3px;
+
+  --font-display: "Space Grotesk", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-body: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-mono: "JetBrains Mono", "IBM Plex Mono", ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-body);
+  color: var(--ink);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button { font-family: inherit; cursor: pointer; }
+
+/* ---- Type ---- */
+.h-display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 0.9;
+}
+.mono { font-family: var(--font-mono); letter-spacing: 0.02em; }
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+/* ---- Cards / panels ---- */
+.panel {
+  background: var(--paper);
+  border: var(--stroke) solid var(--line);
+}
+.panel-bold {
+  background: var(--paper);
+  border: var(--stroke-bold) solid var(--line);
+}
+
+/* ---- Buttons ---- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: var(--stroke-bold) solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+  padding: 12px 20px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 600;
+  transition: transform 80ms ease, background 120ms ease, color 120ms ease;
+  user-select: none;
+}
+.btn:hover { background: var(--ink); color: var(--paper); }
+.btn:active { transform: translate(1px, 1px); }
+.btn-primary { background: var(--ink); color: var(--paper); }
+.btn-primary:hover { background: var(--accent-1); color: var(--paper); border-color: var(--accent-1); }
+.btn-accent { background: var(--accent-1); color: var(--paper); border-color: var(--line); }
+.btn-ghost { background: transparent; }
+
+/* ---- Tags ---- */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border: 1.5px solid var(--line);
+  background: var(--paper);
+}
+
+/* ---- Stat blocks ---- */
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.stat .v {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 28px;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+.stat .k {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+/* ---- Grid backgrounds ---- */
+.grid-bg {
+  background-image:
+    linear-gradient(to right, rgba(17,17,17,0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(17,17,17,0.06) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+.dot-bg {
+  background-image: radial-gradient(rgba(17,17,17,0.18) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+
+/* ---- Theme: dark ---- */
+.theme-dark {
+  --bg: #0e0e10;
+  --bg-2: #18181c;
+  --ink: #f5f1e8;
+  --ink-2: #b9b3a6;
+  --muted: #6e6a60;
+  --line: #f5f1e8;
+  --paper: #18181c;
+  --accent-1: #ff5a5f;
+  --accent-2: #6aa6ff;
+  --accent-3: #f6c945;
+  --accent-4: #43d1c1;
+  --accent-5: #9b7dff;
+  --accent-6: #a4dd2b;
+  --accent-7: #ff9633;
+  --accent-8: #4cd5f7;
+}
+
+/* ---- Theme: monochrome ---- */
+.theme-mono {
+  --accent-1: #111111;
+  --accent-2: #333333;
+  --accent-3: #666666;
+  --accent-4: #888888;
+  --accent-5: #555555;
+  --accent-6: #444444;
+  --accent-7: #222222;
+  --accent-8: #777777;
+}
+
+/* ---- Theme: pastel ---- */
+.theme-pastel {
+  --bg: #f7f3ee;
+  --paper: #ffffff;
+  --accent-1: #f4978e;
+  --accent-2: #94a7c9;
+  --accent-3: #f5d77a;
+  --accent-4: #88c9a1;
+  --accent-5: #b8a4e3;
+  --accent-6: #c3d68c;
+  --accent-7: #f5b687;
+  --accent-8: #9ed4dd;
+}
+
+/* ---- Theme: neon ---- */
+.theme-neon {
+  --bg: #060611;
+  --bg-2: #0c0c1c;
+  --ink: #e8feff;
+  --ink-2: #99d4dd;
+  --muted: #4f6b7a;
+  --line: #2a3a4a;
+  --paper: #0a0a18;
+  --accent-1: #ff2a6d;
+  --accent-2: #05d9e8;
+  --accent-3: #fff200;
+  --accent-4: #00ffa3;
+  --accent-5: #d300c5;
+  --accent-6: #aaff00;
+  --accent-7: #ff8a00;
+  --accent-8: #00b8ff;
+}
+
+/* ---- Scrollbar (thin/minimal) ---- */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: rgba(17,17,17,0.25); }
+::-webkit-scrollbar-track { background: transparent; }
