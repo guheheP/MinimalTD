@@ -9,6 +9,17 @@ const BASE_RARITY_WEIGHTS: Record<ItemRarity, number> = {
   mythic: 1,
 };
 
+// Per-step weight added to BASE_RARITY_WEIGHTS for each Foundry boost purchased.
+// Higher rarities get smaller per-step deltas, so a single rare boost has a
+// larger effect on the rare slice than a single mythic boost has on mythic.
+const BOOST_WEIGHT_PER_STEP: Record<ItemRarity, number> = {
+  common: 0,
+  rare: 4,
+  epic: 3,
+  legendary: 2,
+  mythic: 1,
+};
+
 const RARITY_ORDER: ItemRarity[] = ['common', 'rare', 'epic', 'legendary', 'mythic'];
 
 export interface DropOptions {
@@ -19,11 +30,11 @@ export interface DropOptions {
 function effectiveWeights(boosts?: Partial<Record<ItemRarity, number>>): Record<ItemRarity, number> {
   if (!boosts) return BASE_RARITY_WEIGHTS;
   return {
-    common: BASE_RARITY_WEIGHTS.common + (boosts.common ?? 0),
-    rare: BASE_RARITY_WEIGHTS.rare + (boosts.rare ?? 0),
-    epic: BASE_RARITY_WEIGHTS.epic + (boosts.epic ?? 0),
-    legendary: BASE_RARITY_WEIGHTS.legendary + (boosts.legendary ?? 0),
-    mythic: BASE_RARITY_WEIGHTS.mythic + (boosts.mythic ?? 0),
+    common: BASE_RARITY_WEIGHTS.common + (boosts.common ?? 0) * BOOST_WEIGHT_PER_STEP.common,
+    rare: BASE_RARITY_WEIGHTS.rare + (boosts.rare ?? 0) * BOOST_WEIGHT_PER_STEP.rare,
+    epic: BASE_RARITY_WEIGHTS.epic + (boosts.epic ?? 0) * BOOST_WEIGHT_PER_STEP.epic,
+    legendary: BASE_RARITY_WEIGHTS.legendary + (boosts.legendary ?? 0) * BOOST_WEIGHT_PER_STEP.legendary,
+    mythic: BASE_RARITY_WEIGHTS.mythic + (boosts.mythic ?? 0) * BOOST_WEIGHT_PER_STEP.mythic,
   };
 }
 

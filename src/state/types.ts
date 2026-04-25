@@ -85,11 +85,6 @@ export const FOUNDRY_DROP_BOOST_COSTS: Partial<Record<ItemRarity, number>> = {
   rare: 100, epic: 300, legendary: 800, mythic: 2000,
 };
 
-// Per-step rarity weight added to base RARITY_WEIGHTS when a boost is purchased.
-export const FOUNDRY_DROP_BOOST_AMOUNT: Partial<Record<ItemRarity, number>> = {
-  rare: 4, epic: 3, legendary: 2, mythic: 1,
-};
-
 export const ITEM_UNLOCK_COSTS_BY_RARITY: Record<ItemRarity, number> = {
   common: 0,
   rare: 0,

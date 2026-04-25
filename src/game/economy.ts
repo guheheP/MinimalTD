@@ -54,7 +54,6 @@ if (import.meta.env?.DEV) {
   for (const id in TOWER_DEFS) {
     const tid = id as TowerId;
     if (TOWER_DEFS[tid].cost !== UPGRADE_COSTS[tid][0]) {
-      // eslint-disable-next-line no-console
       console.warn(
         `[economy] Cost desync for ${tid}: TOWER_DEFS=${TOWER_DEFS[tid].cost}, UPGRADE_COSTS=${UPGRADE_COSTS[tid][0]}`,
       );
