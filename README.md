@@ -32,6 +32,25 @@ npm run preview    # serve the built dist/ locally
 
 The output is static — deploy `dist/` to any static host (GitHub Pages, Cloudflare Pages, Netlify, itch.io, …).
 
+## Deploy to GitHub Pages
+
+This repo ships a one-click GitHub Pages deployment via `.github/workflows/deploy.yml`.
+
+**One-time setup:**
+
+1. Push the project to a GitHub repository (any name; the workflow auto-derives the URL prefix).
+2. In the repo, go to **Settings → Pages → Build and deployment** and set **Source** to **GitHub Actions**.
+3. Push to `main` (or run the workflow manually from the **Actions** tab) — the site will be available at `https://<owner>.github.io/<repo>/` once the workflow finishes.
+
+**How it works:**
+
+- The workflow runs `typecheck` + `test` + `build`, with `BASE_PATH=/${{ github.event.repository.name }}/` so Vite emits asset URLs under the repo subpath.
+- `dist/index.html` is also copied to `dist/404.html` so deep links resolve back to the SPA.
+
+**Other hosts (Cloudflare Pages / Netlify / itch.io):**
+
+Just `npm run build` and upload `dist/`. If served from a non-root path, set `BASE_PATH=/<sub>/ npm run build`.
+
 ## Scripts
 
 | Script | Purpose |
