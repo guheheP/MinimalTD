@@ -11,9 +11,11 @@ import { masteryDmgMul } from '../game/items/effects';
 import AnimatedNumber from './AnimatedNumber';
 import { formatNumber } from '../util/format';
 import { useT } from '../i18n';
+import { useViewport } from '../util/useViewport';
 
 export default function ResearchScreen() {
   const t = useT();
+  const { isMobile } = useViewport();
   const cores = useMetaStore((s) => s.cores);
   const towersUnlocked = useMetaStore((s) => s.unlocks.towers);
   const mastery = useMetaStore((s) => s.mastery);
@@ -21,11 +23,11 @@ export default function ResearchScreen() {
   const unlockTower = useMetaStore((s) => s.unlockTower);
 
   return (
-    <div style={{ padding: 24, color: 'var(--ink)', maxWidth: 920, margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', borderBottom: '2px solid var(--line)', paddingBottom: 12, marginBottom: 18 }}>
-        <div>
+    <div style={{ padding: isMobile ? 14 : 24, color: 'var(--ink)', maxWidth: 920, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', borderBottom: '2px solid var(--line)', paddingBottom: 12, marginBottom: 18, gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ minWidth: 0 }}>
           <div className="eyebrow">{t('research.subtitle')}</div>
-          <div className="h-display" style={{ fontSize: 32 }}>{t('research.title')}</div>
+          <div className="h-display" style={{ fontSize: isMobile ? 22 : 32 }}>{t('research.title')}</div>
         </div>
         <div className="stat">
           <div className="v" style={{ color: 'var(--accent-3)' }}><AnimatedNumber value={cores} format={formatNumber} /></div>
@@ -33,7 +35,7 @@ export default function ResearchScreen() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: 10 }}>
         {TOWER_LIST.map((tw) => {
           const id = tw.id as TowerId;
           const unlocked = towersUnlocked.includes(id);
