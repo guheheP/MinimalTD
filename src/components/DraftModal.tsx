@@ -29,8 +29,55 @@ interface DraftModalProps {
   onReroll?: () => void;
 }
 
-function ItemCard({ item, onPick }: { item: ItemDef; onPick: () => void }) {
+function ItemCard({ item, onPick, isMobile }: { item: ItemDef; onPick: () => void; isMobile: boolean }) {
   const color = RARITY_COLOR[item.rarity];
+  const targetLabel = item.scope === 'any' ? 'GLOBAL' : `TARGET: ${String(item.scope).toUpperCase()}`;
+
+  if (isMobile) {
+    return (
+      <button
+        onClick={onPick}
+        style={{
+          width: '100%',
+          padding: 12,
+          background: 'var(--paper)',
+          border: `3px solid ${color}`,
+          cursor: 'pointer',
+          textAlign: 'left',
+          display: 'flex',
+          alignItems: 'stretch',
+          gap: 12,
+        }}
+      >
+        <div
+          style={{
+            flexShrink: 0,
+            width: 56,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 4,
+            background: 'var(--bg-2)',
+            border: `1px solid ${color}`,
+          }}
+        >
+          <div style={{ fontSize: 28, lineHeight: 1, color }}>{item.glyph ?? '◆'}</div>
+          <div className="mono" style={{ fontSize: 8, letterSpacing: '0.14em', color }}>
+            {RARITY_LABEL[item.rarity]}
+          </div>
+        </div>
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4, justifyContent: 'center' }}>
+          <div className="h-display" style={{ fontSize: 16, lineHeight: 1.1 }}>{item.name}</div>
+          <div style={{ fontSize: 11, color: 'var(--ink-2)', lineHeight: 1.35 }}>{item.desc}</div>
+          <div className="mono" style={{ fontSize: 9, letterSpacing: '0.12em', color: 'var(--muted)', marginTop: 2 }}>
+            {targetLabel}
+          </div>
+        </div>
+      </button>
+    );
+  }
+
   return (
     <button
       onClick={onPick}
@@ -54,7 +101,7 @@ function ItemCard({ item, onPick }: { item: ItemDef; onPick: () => void }) {
       <div className="h-display" style={{ fontSize: 18 }}>{item.name}</div>
       <div style={{ fontSize: 12, color: 'var(--ink-2)', lineHeight: 1.4 }}>{item.desc}</div>
       <div className="mono" style={{ fontSize: 10, letterSpacing: '0.12em', color: 'var(--muted)', marginTop: 'auto' }}>
-        {item.scope === 'any' ? 'GLOBAL' : `TARGET: ${String(item.scope).toUpperCase()}`}
+        {targetLabel}
       </div>
     </button>
   );
@@ -74,45 +121,45 @@ export default function DraftModal({ wave, options, rerollsLeft = 0, onPick, onS
         alignItems: 'center',
         justifyContent: 'center',
         zIndex: 50,
-        padding: isMobile ? 12 : 0,
+        padding: isMobile ? 8 : 0,
       }}
     >
       <div
         style={{
           background: 'var(--bg)',
           border: '3px solid var(--line)',
-          padding: isMobile ? 16 : 28,
+          padding: isMobile ? 12 : 28,
           maxWidth: isMobile ? '100%' : 760,
           maxHeight: isMobile ? '100%' : 'none',
           overflow: 'auto',
           width: isMobile ? '100%' : '92%',
           display: 'flex',
           flexDirection: 'column',
-          gap: isMobile ? 12 : 20,
+          gap: isMobile ? 10 : 20,
         }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-          <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
+          <div style={{ minWidth: 0 }}>
             <div className="eyebrow">{t('draft.subtitle', { n: wave })}</div>
-            <div className="h-display" style={{ fontSize: 32 }}>
+            <div className="h-display" style={{ fontSize: isMobile ? 22 : 32 }}>
               {t('draft.title')}
             </div>
           </div>
           <div style={{ display: 'flex', gap: 6 }}>
             {onReroll && rerollsLeft > 0 && (
-              <button className="btn" onClick={onReroll} style={{ padding: '8px 14px', fontSize: 11 }}>
+              <button className="btn" onClick={onReroll} style={{ padding: isMobile ? '6px 10px' : '8px 14px', fontSize: isMobile ? 10 : 11 }}>
                 {t('draft.rerollLabel', { n: rerollsLeft })}
               </button>
             )}
-            <button className="btn btn-ghost" onClick={onSkip} style={{ padding: '8px 14px', fontSize: 11 }}>
+            <button className="btn btn-ghost" onClick={onSkip} style={{ padding: isMobile ? '6px 10px' : '8px 14px', fontSize: isMobile ? 10 : 11 }}>
               {t('common.skip')}
             </button>
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: isMobile ? 10 : 14, flexWrap: 'wrap', flexDirection: isMobile ? 'column' : 'row' }}>
+        <div style={{ display: 'flex', gap: isMobile ? 8 : 14, flexWrap: 'wrap', flexDirection: isMobile ? 'column' : 'row' }}>
           {options.map((it) => (
-            <ItemCard key={it.id} item={it} onPick={() => onPick(it)} />
+            <ItemCard key={it.id} item={it} onPick={() => onPick(it)} isMobile={isMobile} />
           ))}
         </div>
       </div>
