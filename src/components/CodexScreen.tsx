@@ -7,6 +7,7 @@ import { useMetaStore } from '../state/metaStore';
 import { TowerGlyph, EnemyShape } from './Towers';
 import { useT } from '../i18n';
 import type { DictKey } from '../i18n/dict.en';
+import { useViewport } from '../util/useViewport';
 
 type Tab = 'towers' | 'enemies' | 'items';
 
@@ -24,10 +25,11 @@ const ENEMY_KINDS: EnemyKind[] = ['runner', 'swarm', 'tank', 'shield', 'phase', 
 
 export default function CodexScreen() {
   const t = useT();
+  const { isMobile } = useViewport();
   const [tab, setTab] = useState<Tab>('towers');
 
   return (
-    <div style={{ padding: 24, color: 'var(--ink)', maxWidth: 920, margin: '0 auto' }}>
+    <div style={{ padding: isMobile ? 14 : 24, color: 'var(--ink)', maxWidth: 920, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
       <div
         style={{
           display: 'flex',
@@ -36,23 +38,25 @@ export default function CodexScreen() {
           borderBottom: '2px solid var(--line)',
           paddingBottom: 12,
           marginBottom: 18,
+          gap: 12,
+          flexWrap: 'wrap',
         }}
       >
-        <div>
+        <div style={{ minWidth: 0 }}>
           <div className="eyebrow">META · CODEX</div>
-          <div className="h-display" style={{ fontSize: 32 }}>{t('codex.title')}</div>
+          <div className="h-display" style={{ fontSize: isMobile ? 22 : 32 }}>{t('codex.title')}</div>
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
         <SubTab label={t('codex.tabTowers')} active={tab === 'towers'} onClick={() => setTab('towers')} />
         <SubTab label={t('codex.tabEnemies')} active={tab === 'enemies'} onClick={() => setTab('enemies')} />
         <SubTab label={t('codex.tabItems')} active={tab === 'items'} onClick={() => setTab('items')} />
       </div>
 
-      {tab === 'towers' && <TowersTab />}
-      {tab === 'enemies' && <EnemiesTab />}
-      {tab === 'items' && <ItemsTab />}
+      {tab === 'towers' && <TowersTab isMobile={isMobile} />}
+      {tab === 'enemies' && <EnemiesTab isMobile={isMobile} />}
+      {tab === 'items' && <ItemsTab isMobile={isMobile} />}
     </div>
   );
 }
@@ -74,11 +78,11 @@ function SubTab({ label, active, onClick }: { label: string; active: boolean; on
   );
 }
 
-function TowersTab() {
+function TowersTab({ isMobile }: { isMobile: boolean }) {
   const t = useT();
   const unlocked = useMetaStore((s) => s.unlocks.towers);
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: 10 }}>
       {TOWER_LIST.map((tw) => {
         const id = tw.id as TowerId;
         const isUnlocked = unlocked.includes(id);
@@ -110,10 +114,10 @@ function TowersTab() {
   );
 }
 
-function EnemiesTab() {
+function EnemiesTab({ isMobile }: { isMobile: boolean }) {
   const t = useT();
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: 10 }}>
       {ENEMY_KINDS.map((kind) => {
         const def = ENEMIES[kind];
         return (
@@ -141,7 +145,7 @@ function EnemiesTab() {
   );
 }
 
-function ItemsTab() {
+function ItemsTab({ isMobile }: { isMobile: boolean }) {
   const t = useT();
   const unlocked = useMetaStore((s) => s.unlocks.items);
   const unlockedSet = new Set(unlocked);
@@ -173,7 +177,7 @@ function ItemsTab() {
               >
                 {rar.toUpperCase()}
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: 6 }}>
                 {items.map((item) => {
                   const isUnlocked = unlockedSet.has(item.id);
                   return (
