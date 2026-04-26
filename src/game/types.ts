@@ -91,7 +91,7 @@ export interface PlacedTower {
   x: number;
   y: number;
   level: number;
-  spent: number;
+  spent?: number;
   equippedItems?: string[]; // OwnedItem.uid[], max 3
 }
 

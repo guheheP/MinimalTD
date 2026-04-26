@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import type { Route } from '../app/route';
 import { useMetaStore } from '../state/metaStore';
 import { hasRun, loadRun } from '../state/runSave';
@@ -19,10 +19,7 @@ export default function MenuScreen({ navigate }: Props) {
   const highestWave = useMetaStore((s) => s.highestWave);
   const itemsUnlocked = useMetaStore((s) => s.unlocks.items);
 
-  const [continueAvailable, setContinueAvailable] = useState(false);
-  useEffect(() => {
-    setContinueAvailable(hasRun());
-  }, []);
+  const [continueAvailable] = useState(() => hasRun());
 
   const mythicCount = itemsUnlocked.filter((id) => ITEMS[id]?.rarity === 'mythic').length;
 

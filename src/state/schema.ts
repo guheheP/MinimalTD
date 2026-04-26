@@ -53,9 +53,8 @@ export function parseMetaState(raw: unknown): MetaState | null {
 
 // Convert any persisted blob to MetaState | null (= reset to defaults).
 // Add per-version branches as schema evolves.
-export function migrate(raw: unknown, _persistedVersion: number): MetaState | null {
+export function migrate(raw: unknown, persistedVersion: number): MetaState | null {
   if (!raw || typeof raw !== 'object') return null;
-  const v = (raw as { version?: unknown }).version;
-  if (v === META_VERSION) return parseMetaState(raw);
+  if (persistedVersion === META_VERSION) return parseMetaState(raw);
   return null;
 }
