@@ -642,55 +642,80 @@ function GamePlay({ width = 900, height = 560, mapKey = 'zigzag', iconStyle = 'g
     // When modal closes we don't auto-resume; user can press play.
   }, [modalOpen, running]);
 
+  const statBlocks = (
+    <>
+      <div className="stat"><div className="v" style={{ color: 'var(--accent-1)', fontSize: viewport.isMobile ? 20 : 28 }}><AnimatedNumber value={hp} format={formatNumber} /></div><div className="k">HP</div></div>
+      <div className="stat"><div className="v" style={{ fontSize: viewport.isMobile ? 20 : 28 }}><AnimatedNumber value={money} format={formatCurrency} /></div><div className="k">CREDIT</div></div>
+      <div className="stat"><div className="v" style={{ fontSize: viewport.isMobile ? 20 : 28 }}><AnimatedNumber value={wave} format={formatNumber} duration={150} /></div><div className="k">WAVE</div></div>
+      <div className="stat"><div className="v mono" style={{ fontSize: viewport.isMobile ? 20 : 28 }}><AnimatedNumber value={score} format={formatScore} /></div><div className="k">SCORE</div></div>
+    </>
+  );
+
+  const controlButtons = (
+    <div style={{ display: 'flex', gap: 6 }}>
+      <button className="btn" onClick={() => setRunning((r) => !r)} style={{ padding: '8px 12px' }}>{effectiveRunning ? '❚❚' : '▶'}</button>
+      <button className="btn" onClick={() => setSpeed((s) => (s === 1 ? 2 : s === 2 ? 3 : 1))} style={{ padding: '8px 12px' }}>{speed}×</button>
+      <button
+        className="btn"
+        disabled={gameOver}
+        onClick={() => {
+          if (endingRun) {
+            if (endingRunTimerRef.current) {
+              clearTimeout(endingRunTimerRef.current);
+              endingRunTimerRef.current = null;
+            }
+            setEndingRun(false);
+            setHp(0);
+          } else {
+            setEndingRun(true);
+            if (endingRunTimerRef.current) clearTimeout(endingRunTimerRef.current);
+            endingRunTimerRef.current = setTimeout(() => {
+              setEndingRun(false);
+              endingRunTimerRef.current = null;
+            }, 3000);
+          }
+        }}
+        style={{
+          padding: '8px 12px',
+          fontSize: 10,
+          letterSpacing: '0.14em',
+          background: endingRun ? 'var(--accent-1)' : 'transparent',
+          color: endingRun ? 'var(--paper)' : 'var(--ink)',
+          borderColor: endingRun ? 'var(--accent-1)' : 'var(--line)',
+        }}
+      >
+        {endingRun ? t('game.endRunConfirm') : t('common.endRun')}
+      </button>
+    </div>
+  );
+
   return (
     <div style={{ display: 'grid', gridTemplateColumns: compact ? '1fr' : `${W}px 240px`, gap: 12, color: 'var(--ink)' }}>
-      <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid var(--line)', paddingBottom: 10, flexWrap: 'wrap', rowGap: 8 }}>
-        <div style={{ display: 'flex', gap: 18, alignItems: 'baseline' }}>
-          <div className="h-display" style={{ fontSize: viewport.isMobile ? 16 : 20 }}>{map.code} <span style={{ color: 'var(--muted)' }}>/</span> {map.name}</div>
-          <div className="eyebrow">{map.difficulty}</div>
-        </div>
-        <div style={{ display: 'flex', gap: viewport.isMobile ? 14 : 24, alignItems: 'center', flexWrap: 'wrap', rowGap: 8 }}>
-          <div className="stat"><div className="v" style={{ color: 'var(--accent-1)', fontSize: viewport.isMobile ? 22 : 28 }}><AnimatedNumber value={hp} format={formatNumber} /></div><div className="k">HP</div></div>
-          <div className="stat"><div className="v" style={{ fontSize: viewport.isMobile ? 22 : 28 }}><AnimatedNumber value={money} format={formatCurrency} /></div><div className="k">CREDIT</div></div>
-          <div className="stat"><div className="v" style={{ fontSize: viewport.isMobile ? 22 : 28 }}><AnimatedNumber value={wave} format={formatNumber} duration={150} /></div><div className="k">WAVE</div></div>
-          <div className="stat"><div className="v mono" style={{ fontSize: viewport.isMobile ? 22 : 28 }}><AnimatedNumber value={score} format={formatScore} /></div><div className="k">SCORE</div></div>
-          <div style={{ display: 'flex', gap: 6 }}>
-            <button className="btn" onClick={() => setRunning((r) => !r)} style={{ padding: '8px 12px' }}>{effectiveRunning ? '❚❚' : '▶'}</button>
-            <button className="btn" onClick={() => setSpeed((s) => (s === 1 ? 2 : s === 2 ? 3 : 1))} style={{ padding: '8px 12px' }}>{speed}×</button>
-            <button
-              className="btn"
-              disabled={gameOver}
-              onClick={() => {
-                if (endingRun) {
-                  if (endingRunTimerRef.current) {
-                    clearTimeout(endingRunTimerRef.current);
-                    endingRunTimerRef.current = null;
-                  }
-                  setEndingRun(false);
-                  setHp(0);
-                } else {
-                  setEndingRun(true);
-                  if (endingRunTimerRef.current) clearTimeout(endingRunTimerRef.current);
-                  endingRunTimerRef.current = setTimeout(() => {
-                    setEndingRun(false);
-                    endingRunTimerRef.current = null;
-                  }, 3000);
-                }
-              }}
-              style={{
-                padding: '8px 12px',
-                fontSize: 10,
-                letterSpacing: '0.14em',
-                background: endingRun ? 'var(--accent-1)' : 'transparent',
-                color: endingRun ? 'var(--paper)' : 'var(--ink)',
-                borderColor: endingRun ? 'var(--accent-1)' : 'var(--line)',
-              }}
-            >
-              {endingRun ? t('game.endRunConfirm') : t('common.endRun')}
-            </button>
+      {viewport.isMobile ? (
+        <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: 6, borderBottom: '2px solid var(--line)', paddingBottom: 8 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'baseline', minWidth: 0, flex: 1 }}>
+              <div className="h-display" style={{ fontSize: 15, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{map.code} <span style={{ color: 'var(--muted)' }}>/</span> {map.name}</div>
+              <div className="eyebrow" style={{ flexShrink: 0 }}>{map.difficulty}</div>
+            </div>
+            {controlButtons}
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 6 }}>
+            {statBlocks}
           </div>
         </div>
-      </div>
+      ) : (
+        <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid var(--line)', paddingBottom: 10, flexWrap: 'wrap', rowGap: 8 }}>
+          <div style={{ display: 'flex', gap: 18, alignItems: 'baseline' }}>
+            <div className="h-display" style={{ fontSize: 20 }}>{map.code} <span style={{ color: 'var(--muted)' }}>/</span> {map.name}</div>
+            <div className="eyebrow">{map.difficulty}</div>
+          </div>
+          <div style={{ display: 'flex', gap: 24, alignItems: 'center', flexWrap: 'wrap', rowGap: 8 }}>
+            {statBlocks}
+            {controlButtons}
+          </div>
+        </div>
+      )}
 
       <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 10, marginTop: -6, marginBottom: 4, flexWrap: 'wrap' }}>
         <div className="mono" style={{ fontSize: 9, letterSpacing: '0.18em', color: 'var(--muted)' }}>RELICS</div>
@@ -995,52 +1020,71 @@ function GamePlay({ width = 900, height = 560, mapKey = 'zigzag', iconStyle = 'g
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <div className="panel-bold" style={{ padding: 12 }}>
-            <div className="eyebrow" style={{ marginBottom: 10 }}>BUILD</div>
+          <div className="panel-bold" style={{ padding: viewport.isMobile ? 10 : 12 }}>
+            <div className="eyebrow" style={{ marginBottom: viewport.isMobile ? 6 : 10 }}>BUILD</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
               {TOWER_LIST.map((t) => {
                 const isUnlocked = towersUnlocked.includes(t.id);
                 const can = isUnlocked && money >= t.cost;
                 const isSel = selectedTower === t.id;
+                const baseStyle = {
+                  background: isSel ? t.color : 'var(--paper)',
+                  color: isSel ? 'var(--paper)' : 'var(--ink)',
+                  border: `2px solid ${isSel ? t.color : 'var(--line)'}`,
+                  opacity: can ? 1 : 0.4,
+                  cursor: can ? 'pointer' : 'not-allowed',
+                };
                 return (
                   <button key={t.id}
                     onClick={() => { if (isUnlocked) { setSelectedTower(t.id); setSelectedPlaced(null); } }}
                     disabled={!can}
                     title={!isUnlocked ? 'Locked — unlock in Research' : undefined}
-                    style={{
+                    style={viewport.isMobile ? {
+                      ...baseStyle,
+                      display: 'flex', alignItems: 'center', gap: 8,
+                      padding: '8px 10px',
+                    } : {
+                      ...baseStyle,
                       display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 4,
-                      padding: 8, background: isSel ? t.color : 'var(--paper)',
-                      color: isSel ? 'var(--paper)' : 'var(--ink)',
-                      border: `2px solid ${isSel ? t.color : 'var(--line)'}`,
-                      opacity: can ? 1 : 0.4, cursor: can ? 'pointer' : 'not-allowed',
+                      padding: 8,
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', justifyContent: 'space-between' }}>
-                      <TowerGlyph id={t.id} size={20} style={iconStyle} color={isSel ? 'var(--paper)' : t.color} />
-                      <span className="mono" style={{ fontSize: 10 }}>{isUnlocked ? `$${t.cost}` : '🔒'}</span>
-                    </div>
-                    <div className="mono" style={{ fontSize: 10, letterSpacing: '0.12em' }}>{t.name}</div>
+                    {viewport.isMobile ? (
+                      <>
+                        <TowerGlyph id={t.id} size={18} style={iconStyle} color={isSel ? 'var(--paper)' : t.color} />
+                        <span className="mono" style={{ fontSize: 10, letterSpacing: '0.12em', flex: 1, textAlign: 'left' }}>{t.name}</span>
+                        <span className="mono" style={{ fontSize: 10 }}>{isUnlocked ? `$${t.cost}` : '🔒'}</span>
+                      </>
+                    ) : (
+                      <>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', justifyContent: 'space-between' }}>
+                          <TowerGlyph id={t.id} size={20} style={iconStyle} color={isSel ? 'var(--paper)' : t.color} />
+                          <span className="mono" style={{ fontSize: 10 }}>{isUnlocked ? `$${t.cost}` : '🔒'}</span>
+                        </div>
+                        <div className="mono" style={{ fontSize: 10, letterSpacing: '0.12em' }}>{t.name}</div>
+                      </>
+                    )}
                   </button>
                 );
               })}
             </div>
           </div>
 
-          <div className="panel" style={{ padding: 12, minHeight: 160 }}>
+          <div className="panel" style={{ padding: viewport.isMobile ? 10 : 12, minHeight: viewport.isMobile ? 0 : 160 }}>
             {sel && selDef ? (
               <div>
                 <div className="eyebrow">SELECTED · LV {sel.level}</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
-                  <TowerGlyph id={selDef.id} size={26} style={iconStyle} color={selDef.color} />
-                  <div className="h-display" style={{ fontSize: 18 }}>{selDef.name}</div>
+                  <TowerGlyph id={selDef.id} size={viewport.isMobile ? 22 : 26} style={iconStyle} color={selDef.color} />
+                  <div className="h-display" style={{ fontSize: viewport.isMobile ? 16 : 18 }}>{selDef.name}</div>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginTop: 10 }}>
-                  <div className="stat"><div className="v" style={{ fontSize: 16 }}>{Math.round(selDef.dmg * (1 + (sel.level - 1) * 0.5))}</div><div className="k">DMG</div></div>
-                  <div className="stat"><div className="v" style={{ fontSize: 16 }}>{Math.round((selDef.isAura ? 100 + 20 * (sel.level - 1) : selDef.rng * (1 + (sel.level - 1) * 0.1)))}</div><div className="k">{selDef.isAura ? 'AURA' : 'RANGE'}</div></div>
-                  <div className="stat"><div className="v" style={{ fontSize: 16 }}>{selDef.rof || '—'}</div><div className="k">RoF</div></div>
-                  <div className="stat"><div className="v" style={{ fontSize: 16 }}>{selDef.type}</div><div className="k">TYPE</div></div>
+                <div style={{ display: 'grid', gridTemplateColumns: viewport.isMobile ? 'repeat(4, 1fr)' : '1fr 1fr', gap: 6, marginTop: viewport.isMobile ? 8 : 10 }}>
+                  <div className="stat"><div className="v" style={{ fontSize: viewport.isMobile ? 14 : 16 }}>{Math.round(selDef.dmg * (1 + (sel.level - 1) * 0.5))}</div><div className="k">DMG</div></div>
+                  <div className="stat"><div className="v" style={{ fontSize: viewport.isMobile ? 14 : 16 }}>{Math.round((selDef.isAura ? 100 + 20 * (sel.level - 1) : selDef.rng * (1 + (sel.level - 1) * 0.1)))}</div><div className="k">{selDef.isAura ? 'AURA' : 'RANGE'}</div></div>
+                  <div className="stat"><div className="v" style={{ fontSize: viewport.isMobile ? 14 : 16 }}>{selDef.rof || '—'}</div><div className="k">RoF</div></div>
+                  <div className="stat"><div className="v" style={{ fontSize: viewport.isMobile ? 12 : 16 }}>{selDef.type}</div><div className="k">TYPE</div></div>
                 </div>
-                <div style={{ display: 'flex', gap: 6, marginTop: 12 }}>
+                <div style={{ display: 'flex', gap: 6, marginTop: viewport.isMobile ? 8 : 12 }}>
                   <button className="btn btn-primary" onClick={upgradeSelected} disabled={sel.level >= MAX_LEVEL || money < upgradeCost} style={{ padding: '8px 10px', fontSize: 10, flex: 1 }}>
                     {sel.level >= MAX_LEVEL ? 'MAX' : `UP $${upgradeCost}`}
                   </button>
@@ -1051,15 +1095,15 @@ function GamePlay({ width = 900, height = 560, mapKey = 'zigzag', iconStyle = 'g
               <div>
                 <div className="eyebrow">PREVIEW</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
-                  <TowerGlyph id={buyDef.id} size={26} style={iconStyle} color={buyDef.color} />
-                  <div className="h-display" style={{ fontSize: 18 }}>{buyDef.name}</div>
+                  <TowerGlyph id={buyDef.id} size={viewport.isMobile ? 22 : 26} style={iconStyle} color={buyDef.color} />
+                  <div className="h-display" style={{ fontSize: viewport.isMobile ? 16 : 18 }}>{buyDef.name}</div>
                 </div>
-                <div style={{ fontSize: 12, color: 'var(--ink-2)', marginTop: 8, lineHeight: 1.4 }}>{buyDef.desc}</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginTop: 10 }}>
-                  <div className="stat"><div className="v" style={{ fontSize: 16 }}>{buyDef.dmg || '—'}</div><div className="k">DMG</div></div>
-                  <div className="stat"><div className="v" style={{ fontSize: 16 }}>{buyDef.isAura ? 100 : buyDef.rng}</div><div className="k">{buyDef.isAura ? 'AURA' : 'RANGE'}</div></div>
-                  <div className="stat"><div className="v" style={{ fontSize: 16 }}>{buyDef.rof || '—'}</div><div className="k">RoF</div></div>
-                  <div className="stat"><div className="v" style={{ fontSize: 16 }}>${buyDef.cost}</div><div className="k">COST</div></div>
+                <div style={{ fontSize: viewport.isMobile ? 11 : 12, color: 'var(--ink-2)', marginTop: viewport.isMobile ? 6 : 8, lineHeight: 1.4 }}>{buyDef.desc}</div>
+                <div style={{ display: 'grid', gridTemplateColumns: viewport.isMobile ? 'repeat(4, 1fr)' : '1fr 1fr', gap: 6, marginTop: viewport.isMobile ? 8 : 10 }}>
+                  <div className="stat"><div className="v" style={{ fontSize: viewport.isMobile ? 14 : 16 }}>{buyDef.dmg || '—'}</div><div className="k">DMG</div></div>
+                  <div className="stat"><div className="v" style={{ fontSize: viewport.isMobile ? 14 : 16 }}>{buyDef.isAura ? 100 : buyDef.rng}</div><div className="k">{buyDef.isAura ? 'AURA' : 'RANGE'}</div></div>
+                  <div className="stat"><div className="v" style={{ fontSize: viewport.isMobile ? 14 : 16 }}>{buyDef.rof || '—'}</div><div className="k">RoF</div></div>
+                  <div className="stat"><div className="v" style={{ fontSize: viewport.isMobile ? 14 : 16 }}>${buyDef.cost}</div><div className="k">COST</div></div>
                 </div>
               </div>
             ) : null}
