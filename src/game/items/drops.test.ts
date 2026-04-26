@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { rollDraft, rollBossChest, _internals } from './drops';
+import { rollDraft, rollBossChest, rollBossLoot, rollEnemyDrop, _internals } from './drops';
 import type { ItemRarity } from '../types';
 
 // Deterministic-ish RNG cycling through a fixed sequence in [0, 1).
@@ -63,6 +63,51 @@ describe('drops._internals.bossChestFloor', () => {
     expect(f(50)).toBe('legendary');
     expect(f(99)).toBe('legendary');
     expect(f(100)).toBe('mythic');
+  });
+});
+
+describe('drops.rollEnemyDrop', () => {
+  it('never returns a relic', () => {
+    for (let i = 0; i < 200; i++) {
+      const item = rollEnemyDrop();
+      expect(item.category).not.toBe('relic');
+    }
+  });
+});
+
+describe('drops.rollBossLoot', () => {
+  it('returns the requested count', () => {
+    expect(rollBossLoot(Math.random, 10, 2)).toHaveLength(2);
+    expect(rollBossLoot(Math.random, 50, 3)).toHaveLength(3);
+  });
+
+  it('respects the wave rarity floor', () => {
+    for (let i = 0; i < 50; i++) {
+      const items = rollBossLoot(Math.random, 100, 2);
+      for (const it of items) expect(it.rarity).toBe('mythic');
+    }
+  });
+
+  it('is consistent with rollBossChest at count=1', () => {
+    const single = rollBossLoot(Math.random, 30, 1);
+    expect(single).toHaveLength(1);
+    // W30 floor is epic.
+    expect(['epic', 'legendary', 'mythic']).toContain(single[0].rarity);
+  });
+});
+
+describe('drops.rollDraft category filter', () => {
+  it('relic-only draft returns only relics', () => {
+    const draft = rollDraft(Math.random, 3, { category: 'relic' });
+    expect(draft).toHaveLength(3);
+    for (const it of draft) expect(it.category).toBe('relic');
+  });
+
+  it('accepts an array of categories', () => {
+    for (let i = 0; i < 50; i++) {
+      const item = rollDraft(Math.random, 1, { category: ['unique', 'conditional'] })[0];
+      expect(['unique', 'conditional']).toContain(item.category);
+    }
   });
 });
 

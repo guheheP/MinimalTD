@@ -1,4 +1,4 @@
-import type { ItemDef, ItemRarity } from '../types';
+import type { ItemCategory, ItemDef, ItemRarity } from '../types';
 import { ITEM_LIST } from './database';
 
 const BASE_RARITY_WEIGHTS: Record<ItemRarity, number> = {
@@ -22,9 +22,14 @@ const BOOST_WEIGHT_PER_STEP: Record<ItemRarity, number> = {
 
 const RARITY_ORDER: ItemRarity[] = ['common', 'rare', 'epic', 'legendary', 'mythic'];
 
+const NON_RELIC_CATEGORIES: readonly ItemCategory[] = ['tower-mod', 'unique', 'conditional'];
+
 export interface DropOptions {
   unlocked?: ReadonlySet<string>;
   boosts?: Partial<Record<ItemRarity, number>>;
+  // Constrain the pool to one or more categories. Used by the relic-only draft
+  // (category: 'relic') and per-enemy drops (category: NON_RELIC_CATEGORIES).
+  category?: ItemCategory | readonly ItemCategory[];
 }
 
 function effectiveWeights(boosts?: Partial<Record<ItemRarity, number>>): Record<ItemRarity, number> {
@@ -54,6 +59,14 @@ function weightedPickRarity(
   return eligible[eligible.length - 1];
 }
 
+function categoryMatcher(
+  category: ItemCategory | readonly ItemCategory[] | undefined,
+): (item: ItemDef) => boolean {
+  if (!category) return () => true;
+  const allowed = Array.isArray(category) ? category : [category as ItemCategory];
+  return (item) => allowed.includes(item.category);
+}
+
 function rollItem(
   rng: () => number,
   floor: ItemRarity = 'common',
@@ -61,17 +74,26 @@ function rollItem(
 ): ItemDef {
   const weights = effectiveWeights(options?.boosts);
   const rarity = weightedPickRarity(rng, floor, weights);
-  let pool = ITEM_LIST.filter((i) => i.rarity === rarity);
+  const matchesCategory = categoryMatcher(options?.category);
+  let pool = ITEM_LIST.filter((i) => i.rarity === rarity && matchesCategory(i));
   if (options?.unlocked) {
     pool = pool.filter((i) => options.unlocked!.has(i.id));
   }
   if (pool.length === 0) {
-    // Fallback: any unlocked item, else any common item.
+    // Fallback: any unlocked item that still matches the category, else any
+    // common item that matches the category. Category constraint takes
+    // priority over rarity floor — a relic-only draft must never silently
+    // hand back a tower-mod.
     const unlocked = options?.unlocked;
-    const fallback = unlocked
+    const fallback = (unlocked
       ? ITEM_LIST.filter((i) => unlocked.has(i.id))
-      : ITEM_LIST.filter((i) => i.rarity === 'common');
-    if (fallback.length === 0) return ITEM_LIST.find((i) => i.rarity === 'common')!;
+      : ITEM_LIST.filter((i) => i.rarity === 'common')
+    ).filter(matchesCategory);
+    if (fallback.length === 0) {
+      const last = ITEM_LIST.filter(matchesCategory);
+      if (last.length === 0) return ITEM_LIST.find((i) => i.rarity === 'common')!;
+      return last[Math.floor(rng() * last.length)];
+    }
     return fallback[Math.floor(rng() * fallback.length)];
   }
   return pool[Math.floor(rng() * pool.length)];
@@ -109,6 +131,31 @@ export function rollBossChest(
   options?: DropOptions,
 ): ItemDef {
   return rollItem(rng, bossChestFloor(wave), options);
+}
+
+// Boss kills now grant a fixed number of items (typically 2). Each is rolled
+// independently against the wave's rarity floor — duplicates are allowed,
+// which feels fine for a single-modal reveal.
+export function rollBossLoot(
+  rng: () => number = Math.random,
+  wave: number,
+  count = 2,
+  options?: DropOptions,
+): ItemDef[] {
+  const out: ItemDef[] = [];
+  for (let i = 0; i < count; i++) {
+    out.push(rollItem(rng, bossChestFloor(wave), options));
+  }
+  return out;
+}
+
+// Per-enemy drop: low-probability single item from the non-relic pool.
+// Relics stay exclusive to the 5-wave draft.
+export function rollEnemyDrop(
+  rng: () => number = Math.random,
+  options?: DropOptions,
+): ItemDef {
+  return rollItem(rng, 'common', { ...options, category: NON_RELIC_CATEGORIES });
 }
 
 // Exposed for tests.
