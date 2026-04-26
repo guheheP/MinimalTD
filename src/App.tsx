@@ -9,6 +9,7 @@ import ResultsScreen from './components/ResultsScreen';
 import CodexScreen from './components/CodexScreen';
 import FpsOverlay from './components/FpsOverlay';
 import StorageWarningBanner from './components/StorageWarningBanner';
+import UpdatePrompt from './components/UpdatePrompt';
 import { isNavHidden, type Route, type RunResultStats } from './app/route';
 import { useMetaStore } from './state/metaStore';
 import { useViewport } from './util/useViewport';
@@ -53,6 +54,7 @@ export default function App() {
 
   return (
     <div style={{ width: '100vw', minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
+      <UpdatePrompt />
       <StorageWarningBanner />
       {!navHidden && (
         <nav

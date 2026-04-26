@@ -139,6 +139,10 @@ export const dictEn = {
   'error.reload': 'RELOAD',
   'storage.unavailable': 'Save unavailable: progress will not persist.',
 
+  // PWA update prompt
+  'pwa.updateAvailable': 'A new version is available.',
+  'pwa.update': 'UPDATE',
+
   // Tower descriptions
   'tower.basic.desc': 'Single-target. Cheap, reliable, fast fire-rate.',
   'tower.sniper.desc': 'Long range. High damage, slow reload.',

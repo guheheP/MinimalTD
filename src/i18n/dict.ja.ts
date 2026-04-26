@@ -119,6 +119,9 @@ export const dictJa: Partial<Record<DictKey, string>> = {
   'error.reload': 'リロード',
   'storage.unavailable': '保存できません: 進行データは保存されません。',
 
+  'pwa.updateAvailable': '新しいバージョンが利用可能です。',
+  'pwa.update': '更新',
+
   'tower.basic.desc': '単体狙撃。安価で安定、連射が早い。',
   'tower.sniper.desc': '長射程・高威力・低速リロード。',
   'tower.cannon.desc': '着弾時に範囲ダメージ。',
