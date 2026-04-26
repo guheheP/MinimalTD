@@ -10,7 +10,7 @@ import {
   emptyInventory, addItem, recordDraft, equipItem, unequipItem,
   unequipAllFromTower, rarityCounts,
 } from '../game/items/inventory';
-import { rollDraft, rollBossChest } from '../game/items/drops';
+import { rollDraft, rollBossLoot, rollEnemyDrop } from '../game/items/drops';
 import { getItem } from '../game/items/database';
 import DraftModal from './DraftModal';
 import BossChestModal from './BossChestModal';
@@ -25,6 +25,14 @@ import { saveRun, clearRun } from '../state/runSave';
 import { useViewport } from '../util/useViewport';
 import { playSfx } from '../audio/sfx';
 import { useT } from '../i18n';
+
+const LOOT_RARITY_COLOR = {
+  common: 'var(--ink-2)',
+  rare: 'var(--accent-2)',
+  epic: 'var(--accent-5)',
+  legendary: 'var(--accent-3)',
+  mythic: 'var(--accent-1)',
+};
 
 function GamePlay({ width = 900, height = 560, mapKey = 'zigzag', iconStyle = 'geometric', compact = false, onExit, resume }) {
   const map = MAPS[mapKey];
@@ -79,6 +87,8 @@ function GamePlay({ width = 900, height = 560, mapKey = 'zigzag', iconStyle = 'g
   const projectilesRef = useRef([]);
   const particlesRef = useRef([]);    // kill shards
   const damageTextsRef = useRef([]);  // floating damage numbers
+  const lootTextsRef = useRef([]);    // floating "+ITEM" notifications
+  const pendingLootRef = useRef([]);  // ItemDefs to flush into inventory once per frame
   const ripplesRef = useRef([]);      // PHASE/SHIELD/BEACON visuals
   const bossWarnRef = useRef({ active: false, until: 0 });
   const tickRef = useRef(0);
@@ -195,6 +205,10 @@ function GamePlay({ width = 900, height = 560, mapKey = 'zigzag', iconStyle = 'g
   };
 
   useEffect(() => {
+    // Stable per-render. Per-enemy drops, the wave-end draft, and the boss
+    // chest all need the same options shape, so we build it once instead of
+    // re-allocating inside the rAF loop.
+    const dropOpts = { unlocked: unlockedItemSet, boosts: foundry.dropRateBoost };
     let raf;
     const loop = (now) => {
       const dt = Math.min(0.05, (now - lastFrameRef.current) / 1000) * (running ? speed : 0);
@@ -263,6 +277,22 @@ function GamePlay({ width = 900, height = 560, mapKey = 'zigzag', iconStyle = 'g
             playSfx(e.kind === 'boss' ? 'enemy-boss-die' : 'enemy-die');
             // Kill shards
             const [kx, ky] = pointAt(pxPaths[e.pathIdx], e.t);
+            // Per-enemy item drop: 2% from the non-relic pool. Relics stay
+            // exclusive to the 5-wave draft. Drops are queued and flushed in
+            // a single setInventory at the end of the frame.
+            if (e.kind !== 'boss' && Math.random() < 0.02) {
+              const dropped = rollEnemyDrop(Math.random, dropOpts);
+              pendingLootRef.current.push(dropped);
+              lootTextsRef.current.push({
+                x: kx,
+                y: ky - 8,
+                name: dropped.name,
+                glyph: dropped.glyph ?? '◆',
+                rarity: dropped.rarity,
+                life: 1.4,
+                maxLife: 1.4,
+              });
+            }
             const shardCount = e.kind === 'boss' ? 10 : e.kind === 'tank' ? 7 : 5;
             for (let s = 0; s < shardCount; s++) {
               const ang = Math.random() * Math.PI * 2;
@@ -298,6 +328,14 @@ function GamePlay({ width = 900, height = 560, mapKey = 'zigzag', iconStyle = 'g
         if (earnedMoney) setMoney((m) => m + earnedMoney);
         if (earnedScore) setScore((s) => s + earnedScore);
         if (lostHp) setHp((h) => Math.max(0, h - lostHp));
+
+        // Flush queued enemy drops in a single setInventory so multiple kills
+        // in the same frame don't trigger N React updates.
+        if (pendingLootRef.current.length > 0) {
+          const drops = pendingLootRef.current;
+          pendingLootRef.current = [];
+          setInventory((inv) => drops.reduce((acc, item) => addItem(acc, item), inv));
+        }
 
         // Tower fire.
         for (const tw of placed) {
@@ -397,6 +435,11 @@ function GamePlay({ width = 900, height = 560, mapKey = 'zigzag', iconStyle = 'g
           .map((t) => ({ ...t, y: t.y - 28 * dt, life: t.life - dt }))
           .filter((t) => t.life > 0);
 
+        // Loot drop notifications rise + fade (slightly faster than damage).
+        lootTextsRef.current = lootTextsRef.current
+          .map((d) => ({ ...d, y: d.y - 36 * dt, life: d.life - dt }))
+          .filter((d) => d.life > 0);
+
         // Ripple decay.
         ripplesRef.current = ripplesRef.current
           .map((r) => ({ ...r, life: r.life - dt }))
@@ -434,16 +477,18 @@ function GamePlay({ width = 900, height = 560, mapKey = 'zigzag', iconStyle = 'g
             startedAt: new Date(performance.timeOrigin + runStartRef.current).toISOString(),
           });
 
-          const dropOpts = { unlocked: unlockedItemSet, boosts: foundry.dropRateBoost };
-          // Boss chest first (resolves before draft).
+          // Boss kill: 2 items from the full pool, gated by the wave's
+          // rarity floor (rare→epic→legendary→mythic at W30/50/100).
           if (clearedSpec.isBoss) {
-            setBossChestPending(rollBossChest(Math.random, clearedWave, dropOpts));
+            setBossChestPending(rollBossLoot(Math.random, clearedWave, 2, dropOpts));
           }
-          // Draft every 5 waves.
+          // 5-wave draft: relic-only — relics are exclusive to this ritual,
+          // so the 6 relics in the database (3 common / 1 rare / 1 epic / 1
+          // mythic) are all the player ever sees here.
           if (clearedWave % 5 === 0) {
             setDraftPending({
               wave: clearedWave,
-              options: rollDraft(Math.random, 3, dropOpts),
+              options: rollDraft(Math.random, 3, { ...dropOpts, category: 'relic' }),
               rerollsLeft: foundry.rerollCount,
             });
           }
@@ -586,7 +631,7 @@ function GamePlay({ width = 900, height = 560, mapKey = 'zigzag', iconStyle = 'g
 
   const handleDraftReroll = () => {
     if (!draftPending || draftPending.rerollsLeft <= 0) return;
-    const dropOpts = { unlocked: unlockedItemSet, boosts: foundry.dropRateBoost };
+    const dropOpts = { unlocked: unlockedItemSet, boosts: foundry.dropRateBoost, category: 'relic' };
     setDraftPending({
       wave: draftPending.wave,
       options: rollDraft(Math.random, 3, dropOpts),
@@ -596,8 +641,9 @@ function GamePlay({ width = 900, height = 560, mapKey = 'zigzag', iconStyle = 'g
 
   const handleChestTake = () => {
     if (!bossChestPending) return;
-    setInventory((inv) => addItem(inv, bossChestPending));
-    if (bossChestPending.rarity === 'mythic') playSfx('loot-rarity-mythic');
+    const items = bossChestPending;
+    setInventory((inv) => items.reduce((acc, item) => addItem(acc, item), inv));
+    if (items.some((it) => it.rarity === 'mythic')) playSfx('loot-rarity-mythic');
     setBossChestPending(null);
   };
 
@@ -809,6 +855,26 @@ function GamePlay({ width = 900, height = 560, mapKey = 'zigzag', iconStyle = 'g
               </text>
             ))}
 
+            {/* Floating loot drop notifications */}
+            {lootTextsRef.current.map((d, idx) => (
+              <text
+                key={`l${idx}`}
+                x={d.x}
+                y={d.y}
+                fontFamily="var(--font-mono)"
+                fontWeight="700"
+                fontSize={12}
+                fill={LOOT_RARITY_COLOR[d.rarity]}
+                stroke="var(--paper)"
+                strokeWidth={1.6}
+                paintOrder="stroke"
+                opacity={d.life / d.maxLife}
+                textAnchor="middle"
+              >
+                {d.glyph} {d.name}
+              </text>
+            ))}
+
             {sel && selDef && !selDef.isAura && (() => {
               const eff = towerEffects.get(sel.id) ?? emptyEffect();
               const rng = selDef.rng * (1 + (sel.level - 1) * 0.1) * eff.rngMul + eff.rngAdd;
@@ -975,6 +1041,7 @@ function GamePlay({ width = 900, height = 560, mapKey = 'zigzag', iconStyle = 'g
                   setHp(20); setMoney(220); setWave(1); setScore(0); setPlaced([]);
                   enemiesRef.current = []; projectilesRef.current = [];
                   particlesRef.current = []; damageTextsRef.current = []; ripplesRef.current = [];
+                  lootTextsRef.current = []; pendingLootRef.current = [];
                   bossWarnRef.current = { active: false, until: 0 };
                   spawnRef.current = { schedule: [], idx: 0, t: 0 };
                   setInventory(emptyInventory());
@@ -1000,7 +1067,7 @@ function GamePlay({ width = 900, height = 560, mapKey = 'zigzag', iconStyle = 'g
           {bossChestPending && !draftPending && (
             <BossChestModal
               wave={wave - 1}
-              item={bossChestPending}
+              items={bossChestPending}
               onTake={handleChestTake}
             />
           )}
